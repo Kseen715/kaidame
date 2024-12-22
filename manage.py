@@ -70,9 +70,9 @@ def download_common_files():
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--client', action='store_true')
-    parser.add_argument('--server', action='store_true')
+    parser = argparse.ArgumentParser(description='Download mods for client or server')
+    parser.add_argument('--client', action='store_true', help='Download mods for client')
+    parser.add_argument('--server', action='store_true', help='Download mods for server')
     args = parser.parse_args()
 
     if args.client:
