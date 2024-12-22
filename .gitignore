@@ -18,6 +18,7 @@ servers.dat*
 .curseclient
 config/xaeropatreon.txt
 config/xaerominimap_entities.json 
+config/NoChatReports
 crash-reports
 xaero
 XaeroWaypoints*
