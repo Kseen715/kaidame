@@ -18,6 +18,7 @@ servers.dat*
 .curseclient
 config/xaeropatreon.txt
 config/xaerominimap_entities.json 
+crash-reports
 xaero
 XaeroWaypoints*
 optionsshaders.txt
