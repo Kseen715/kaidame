@@ -3,6 +3,7 @@ import requests
 import csv
 import os
 import argparse
+from time import sleep
 
 
 def read_csv(filename: str) -> list:
@@ -19,18 +20,33 @@ def read_csv(filename: str) -> list:
     return data
 
 
-def get_file(frame: dict, dir: str):
+def get_file(frame: dict, dir: str, max_retries=5):
     """
     Get a file from url and save it to dir
     Use requests.get to get the file
     """
-    response = requests.get(frame['url'])
-    # if dir does not exist, create it
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-    path = dir + frame['filename']
-    with open(path, 'wb') as file:
-        file.write(response.content)
+    retries = 0
+    while retries < max_retries:
+        try:
+            response = requests.get(frame['url'])
+            response.raise_for_status()  # Raise exception for bad status codes
+            
+            # if dir does not exist, create it
+            if not os.path.exists(dir):
+                os.makedirs(dir)
+                
+            path = dir + frame['filename']
+            with open(path, 'wb') as file:
+                file.write(response.content)
+            return True
+            
+        except (requests.RequestException, IOError) as e:
+            retries += 1
+            if retries == max_retries:
+                print(f"Failed to download {frame['url']} after {max_retries} attempts. Skipping.")
+                return False
+            print(f"Attempt {retries} failed. Retrying in 1 second...")
+            sleep(1)
 
 
 def clear_dir(dir: str):
