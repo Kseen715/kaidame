@@ -1,6 +1,22 @@
 mods/*
 *.jar
 
+# Client
+defaultconfigs
+logs
+resourcepacks
+saves
+screenshots
+shaderpacks
+options.txt
+lastlogin
+launcher_log.txt
+launcher_profiles.json
+launcher_accounts.json
+minecraftinstance.json
+servers.dat*
+.curseclient
+
 # Python
 *.pyc
 venv
