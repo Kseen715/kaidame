@@ -19,6 +19,8 @@ servers.dat*
 config/xaeropatreon.txt
 xaero
 XaeroWaypoints*
+optionsshaders.txt
+optionsof.txt
 
 # Server
 eula.txt
