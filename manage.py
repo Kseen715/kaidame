@@ -2,6 +2,8 @@
 import requests
 import csv
 import os
+import argparse
+
 
 def read_csv(filename: str) -> list:
     with open(filename, 'r') as file:
@@ -37,27 +39,58 @@ def clear_dir(dir: str):
     """
     if not os.path.exists(dir):
         return
+    print(f"Clearing {dir}... ", end='')
     for file in os.listdir(dir):
         os.remove(dir + file)
+    print('Done!')
 
 
 def download_client_files():
     data = read_csv('getters/client.csv')
     for frame in data:
+        print(f"Downloading {frame['filename']}... ", end='')
         get_file(frame, 'mods/')
+        print('Done!')
+
 
 def download_server_files():
     data = read_csv('getters/server.csv')
     for frame in data:
+        print(f"Downloading {frame['filename']}... ", end='')
         get_file(frame, 'mods/')
+        print('Done!')
+
 
 def download_common_files():
     data = read_csv('getters/common.csv')
     for frame in data:
+        print(f"Downloading {frame['filename']}... ", end='')
         get_file(frame, 'mods/')
+        print('Done!')
 
-if __name__ == "__main__":
-    clear_dir('mods/')
-    download_client_files()
-    download_server_files()
-    download_common_files()
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--client', action='store_true')
+    parser.add_argument('--server', action='store_true')
+    args = parser.parse_args()
+
+    if args.client:
+        clear_dir('mods/')
+        download_common_files()
+        download_client_files()
+    elif args.server:
+        clear_dir('mods/')
+        download_common_files()
+        download_server_files()
+    else:
+        print('Please specify --client or --server')
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        print(e)
+    except KeyboardInterrupt:
+        print('Interrupted!')
