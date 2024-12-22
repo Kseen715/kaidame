@@ -16,6 +16,8 @@ launcher_accounts.json
 minecraftinstance.json
 servers.dat*
 .curseclient
+config/xaeropatreon.txt
+xaero
 
 # Server
 eula.txt
