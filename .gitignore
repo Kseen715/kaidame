@@ -1,6 +1,5 @@
 mods/*
-./*.jar
-
+*.jar
 
 # Python
 *.pyc
