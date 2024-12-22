@@ -17,6 +17,7 @@ minecraftinstance.json
 servers.dat*
 .curseclient
 config/xaeropatreon.txt
+config/xaerominimap_entities.json 
 xaero
 XaeroWaypoints*
 optionsshaders.txt
