@@ -1,0 +1,33 @@
+# This is the main configuration file for Ketting.
+#
+# Site: https://kettingpowered.org/
+# Github: https://github.com/kettingpowered/
+# Discord: https://discord.kettingpowered.org/
+#
+# Value: debug.print_injections Default: false   # Print all values injected into Bukkit to the console.
+# Value: debug.warn_on_unknown_entity Default: true   # Print a warning to the console when an entity unknown to Bukkit is spawned.
+# Value: debug.warn_on_null_nbt Default: true   # Print a warning to the console when something tries to set a null NBT tag.
+# Value: debug.warn_on_unknown_structure_type Default: true   # Print a warning to the console when a structure type is unknown to Bukkit.
+# Value: forge.overwrite_forge_permissions Default: false   # --- WARNING - THIS WILL COMPLETELY DISABLE FORGE PERMISSION CHECKS ---  Overwrite Forge permissions with Bukkit permissions, makes it possible to use a permission manager plugin for modded commands. If true, Forge permissions will be set to 'forge.command.MODDEDCOMMAND' where MODDEDCOMMAND is the name of the modded command.
+# Value: ketting.merge_world_systems Default: false   # If true, this will attempt to merge both the Forge and Bukkit world system into one, making dimensions exist in the world folder, and Bukkit worlds in their own folder.
+# Value: ketting.halt.exit Default: false   # If true, Ketting will call System.exit(255), once it is supposed to regularly shutdown. This is useful, if some plugins or mods keep the server up unintentionally.
+# Value: ketting.halt.halt Default: true   # If true, Ketting will call Runtime.getRuntime().halt(), once it is supposed to regularly shutdown. Overrides 'ketting.halt.exit'. THIS SKIPS SHUTDOWN HOOKS. SOME STUFF MIGHT BREAK! IF YOU CAN, ENABLE 'ketting.halt.exit' INSTEAD!
+# Value: ketting.halt.thread_dump.sleep_time Default: 5000   # If true, Ketting will sleep this many seconds before printing the thread-dump.
+# Value: ketting.halt.thread_dump.enabled Default: false   # If true, Ketting will print a Stacktrace of all threads once the server is supposed to regularly shutdown. This option is intended to aid debugging for the option 'ketting.force.halt'.
+
+debug:
+  print_injections: false
+  warn_on_unknown_entity: true
+  warn_on_null_nbt: true
+  warn_on_unknown_structure_type: true
+forge:
+  overwrite_forge_permissions: false
+ketting:
+  merge_world_systems: false
+  halt:
+    exit: false
+    halt: true
+    thread_dump:
+      sleep_time: 5000
+      enabled: false
+config-version: 1

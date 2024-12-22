@@ -17,6 +17,22 @@ minecraftinstance.json
 servers.dat*
 .curseclient
 
+# Server
+eula.txt
+libraries
+logs
+world*
+plugins/bstats
+plugins/PluginMetrics
+help.yml
+ops.json
+server.properties
+usercache.json
+whitelist.json
+usernamecache.json
+banned-ips.json
+banned-players.json
+
 # Python
 *.pyc
 venv
