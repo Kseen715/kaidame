@@ -2,6 +2,11 @@ mods/*
 *.jar
 
 # Client
+config/xaeropatreon.txt
+config/xaerominimap_entities.json 
+config/NoChatReports
+servers.dat*
+XaeroWaypoints*
 defaultconfigs
 logs
 resourcepacks
@@ -14,24 +19,22 @@ launcher_log.txt
 launcher_profiles.json
 launcher_accounts.json
 minecraftinstance.json
-servers.dat*
 .curseclient
-config/xaeropatreon.txt
-config/xaerominimap_entities.json 
-config/NoChatReports
 crash-reports
 xaero
-XaeroWaypoints*
 optionsshaders.txt
 optionsof.txt
 
 # Server
-eula.txt
-libraries
-logs
-world*
 plugins/bstats
 plugins/PluginMetrics
+*.db
+world*
+.mixin.out
+eula.txt
+.license
+libraries
+logs
 help.yml
 ops.json
 server.properties
