@@ -7,6 +7,10 @@ key
 config/xaeropatreon.txt
 config/xaerominimap_entities.json 
 config/NoChatReports
+config/durabilitytooltip*
+config/emi*
+config/tectonic*
+emi.json
 servers.dat*
 XaeroWaypoints*
 defaultconfigs
