@@ -30,6 +30,7 @@ optionsof.txt
 # Server
 plugins/bstats
 plugins/PluginMetrics
+config/jade
 *.db
 world*
 .mixin.out
