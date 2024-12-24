@@ -4,6 +4,16 @@ import csv
 import os
 import argparse
 import time
+import base64
+
+import ksilorama as ks
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+from Crypto.Random import get_random_bytes
+
+CLEAR = ks.Style.RESET_ALL
+GREEN = ks.Fore.GREEN
+RED = ks.Fore.RED
 
 
 def read_csv(filename: str) -> list:
@@ -24,6 +34,52 @@ def get_file(frame: dict, dir: str, max_retries=5):
     url = frame['url']
     filename = frame['filename']
     download_file(url, dir, filename, max_retries)
+
+
+def encrypt_file(key: str, in_path: str, out_path: str):
+    """
+    Encrypt the file using AES
+    """
+    with open(in_path, 'rb') as file:
+        content = file.read()
+
+    cipher = AES.new(key, AES.MODE_CBC)
+    ct_bytes = cipher.encrypt(pad(content, AES.block_size))
+    ct_bytes = base64.b64encode(ct_bytes).decode('utf-8')
+
+    with open(out_path, 'wb') as file:
+        file.write(ct_bytes.encode('utf-8'))
+
+
+def decrypt_file(key: str, in_path: str, out_path: str):
+    """
+    Decrypt the file using AES
+    """
+    with open(in_path, 'rb') as file:
+        ct_bytes = file.read()
+
+    cipher = AES.new(key, AES.MODE_CBC)
+    ct_bytes = base64.b64decode(ct_bytes)
+    pt = unpad(cipher.decrypt(ct_bytes), AES.block_size)
+
+    with open(out_path, 'wb') as file:
+        file.write(pt)
+
+
+def generate_key():
+    return get_random_bytes(32)
+
+
+def read_key():
+    with open('key', 'r') as file:
+        key = file.read()
+    return base64.b64decode(key)
+
+
+def save_key(key):
+    key = base64.b64encode(key).decode('utf-8')
+    with open('key', 'w') as file:
+        file.write(key)
 
 
 def download_file(url, dir, filename, max_retries=3):
@@ -53,8 +109,8 @@ def download_file(url, dir, filename, max_retries=3):
             print()  # New line after download
 
             if downloaded != total_size:
-                raise ValueError(f"Download incomplete: {
-                                 downloaded}/{total_size} bytes")
+                raise ValueError(f"{RED}Download incomplete: {
+                                 downloaded}/{total_size} bytes{CLEAR} ")
 
             os.makedirs(dir, exist_ok=True)
             path = os.path.join(dir, filename)
@@ -66,10 +122,10 @@ def download_file(url, dir, filename, max_retries=3):
 
         except (requests.RequestException, ValueError, IOError) as e:
             if attempt == max_retries - 1:
-                print(f"\nError downloading {filename}: {str(e)}")
+                print(f"\n{RED}Error downloading {filename}: {str(e)}{CLEAR} ")
                 return False
-            print(f"\nRetrying download... (attempt {
-                  attempt + 2}/{max_retries})")
+            print(f"\n{RED}Retrying download... (attempt {
+                  attempt + 2}/{max_retries}){CLEAR} ")
             time.sleep(1)
 
 
@@ -83,14 +139,25 @@ def clear_dir(dir: str, extensions=['.jar', '.zip']):
     for file in os.listdir(dir):
         if any(file.endswith(ext) for ext in extensions):
             os.remove(dir + file)
-    print('Done!')
+    print(f'{GREEN}Done!{CLEAR} ')
 
+def install_crypto_client_files():
+    # install files from ./getters/client
+    files = os.listdir('./getters/client')
+    for file in files:
+        # check if file is a jar file
+        if file.endswith('.jar.enc'):
+            # decrypt the file
+            print(f"Decrypting {file}...")
+            decrypt_file(read_key(), f'./getters/client/{file}', f'./mods/{file[:-4]}')
 
 def download_client_files():
+    install_crypto_client_files()
     data = read_csv('getters/client.csv')
     for frame in data:
         print(f"Downloading {frame['filename']}...")
         get_file(frame, 'mods/')
+
 
 
 def download_server_files():
@@ -121,6 +188,9 @@ def main():
                         help='Download mods for client')
     parser.add_argument('--server', action='store_true',
                         help='Download mods for server')
+    parser.add_argument('--key', action='store_true',
+                        help='Generate key for encryption')
+    parser.add_argument('--encrypt', type=str, help='Encrypt file')
     args = parser.parse_args()
 
     if args.client:
@@ -128,7 +198,7 @@ def main():
         clear_dir('mods/')
         download_common_files()
         download_client_files()
-        print(f'Done! {(time.time() - start):.1f}s')
+        print(f'{GREEN}Done! {(time.time() - start):.1f}s{CLEAR} ')
     elif args.server:
         start = time.time()
         clear_dir('mods/')
@@ -136,7 +206,17 @@ def main():
         download_common_files()
         download_server_files()
         download_plugins_files()
-        print(f'Done! {(time.time() - start):.1f}s')
+        print(f'{GREEN}Done! {(time.time() - start):.1f}s{CLEAR} ')
+    elif args.key:
+        save_key(generate_key())
+        print(f'{GREEN}Key generated and saved! ./key{CLEAR} ')
+        # print(read_key())
+        # encrypt_file(key, 'mods/OptiFine_1.20.1_HD_U_I6.jar',
+        #              'mods/optiflex.enc')
+        # decrypt_file(key, 'mods/optiflex.enc', 'mods/optiflex.jar')
+    elif args.encrypt:
+        key = read_key()
+        encrypt_file(key, args.encrypt, args.encrypt + '.enc')
     else:
         print('Please specify --client or --server')
 

@@ -1,5 +1,7 @@
 mods/*
 *.jar
+venv
+key
 
 # Client
 config/xaeropatreon.txt
