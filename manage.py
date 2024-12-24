@@ -15,6 +15,7 @@ CLEAR = ks.Style.RESET_ALL
 GREEN = ks.Fore.GREEN
 YELLOW = ks.Fore.YELLOW
 RED = ks.Fore.RED
+CYAN = ks.Fore.CYAN
 
 
 def read_csv(filename: str) -> list:
@@ -31,10 +32,46 @@ def read_csv(filename: str) -> list:
     return data
 
 
-def get_file(frame: dict, dir: str, max_retries=5):
+def get_file(
+        frame: dict, dir: str, max_retries=5,
+        mc_version: str = "1.20.1",
+        modloader: str = "forge"
+):
+    MODRINTH_API = "https://api.modrinth.com/v2"
+
     url = frame['url']
     filename = frame['filename']
-    download_file(url, dir, filename, max_retries)
+    # if url in in pattern "https://cdn.modrinth.com/data/XXXXXXXX/"
+    if url.startswith('https://cdn.modrinth.com/data/'):
+        # Modrinth
+        if 'versions/' in url:
+            download_file(url, dir, filename, max_retries)
+            return
+        else:
+            print(f'{CYAN}', end='')
+            # get version
+            project_id = list(filter(None, url.split('/')))[-1]
+            all_version = requests.get(
+                f"{MODRINTH_API}/project/{project_id}/version"
+            ).json()
+            # if mc_version is not in game_versions, remove it from the list
+            all_version = list(filter(
+                lambda x: mc_version in x['game_versions'], all_version)
+            )
+            # if modloader is not in loaders, remove it from the list
+            all_version = list(filter(
+                lambda x: modloader in x['loaders'], all_version)
+            )
+            # sort by date_published
+            all_version = sorted(
+                all_version, key=lambda x: x['date_published'], reverse=True
+            )
+            latest = all_version[0]
+            url = latest['files'][0]['url']
+            new_filename = latest['files'][0]['filename']
+            download_file(url, dir, new_filename, max_retries)
+            print(f'{CLEAR}', end='')
+            return
 
 
 def show_progress(downloaded, total):
@@ -172,7 +209,7 @@ def download_file(url, dir, filename, max_retries=3):
             if attempt == max_retries - 1:
                 print(f"\n{RED}Error downloading {filename}: {str(e)}{CLEAR} ")
                 return False
-            print(f"\n{YELLOW}Retrying download... (attempt {
+            print(f"{YELLOW}Retrying download... (attempt {
                   attempt + 2}/{max_retries}){CLEAR} ")
             time.sleep(1)
 
