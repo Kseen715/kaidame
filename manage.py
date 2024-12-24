@@ -11,6 +11,11 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
 
+MODRINTH_BASE_URL = "https://cdn.modrinth.com"
+MODRINTH_API = "https://api.modrinth.com/v2"
+CURSEFORGE_BASE_URL = "https://www.curseforge.com"
+CURSEFORGE_API = "https://www.curseforge.com/api/v1"
+
 # Colors
 CLEAR = ks.Style.RESET_ALL
 GREEN = ks.Fore.GREEN
@@ -40,11 +45,6 @@ def get_file(
         mc_version: str = "1.20.1",
         modloader: str = "forge"
 ):
-    MODRINTH_BASE_URL = "https://cdn.modrinth.com"
-    MODRINTH_API = "https://api.modrinth.com/v2"
-    CURSEFORGE_BASE_URL = "https://www.curseforge.com"
-    CURSEFORGE_API = "https://www.curseforge.com/api/v1"
-
     url = frame['url']
     filename = frame['filename']
     # if url in in pattern "https://cdn.modrinth.com/data/XXXXXXXX/"
@@ -290,7 +290,7 @@ def download_client_files():
         return
     for frame in data:
         print(f"Downloading {frame['filename']}...")
-        get_file(frame, 'mods/')
+        get_file(frame, 'mods/', modloader=frame['loader'])
 
 
 def download_server_files():
@@ -299,7 +299,7 @@ def download_server_files():
         return
     for frame in data:
         print(f"Downloading {frame['filename']}...")
-        get_file(frame, 'mods/')
+        get_file(frame, 'mods/', modloader=frame['loader'])
 
 
 def download_plugins_files():
@@ -308,7 +308,7 @@ def download_plugins_files():
         return
     for frame in data:
         print(f"Downloading {frame['filename']}...")
-        get_file(frame, 'plugins/', modloader='bukkit')
+        get_file(frame, 'plugins/', modloader=frame['loader'])
 
 
 def download_common_files():
@@ -317,7 +317,7 @@ def download_common_files():
         return
     for frame in data:
         print(f"Downloading {frame['filename']}...")
-        get_file(frame, 'mods/')
+        get_file(frame, 'mods/', modloader=frame['loader'])
 
 
 def main():

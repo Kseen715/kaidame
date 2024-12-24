@@ -1,4 +1,4 @@
-url,filename,comment
-"https://cdn.modrinth.com/data/NNAgCjsB","Entity Culling",""
-"https://cdn.modrinth.com/data/1bokaNcj","Xaero's Minimap",""
-"https://cdn.modrinth.com/data/zV5r3pPn","3d Skin Layers",""
+url,filename,loader,comment
+"https://cdn.modrinth.com/data/NNAgCjsB","Entity Culling","forge",""
+"https://cdn.modrinth.com/data/1bokaNcj","Xaero's Minimap","forge",""
+"https://cdn.modrinth.com/data/zV5r3pPn","3d Skin Layers","forge",""
