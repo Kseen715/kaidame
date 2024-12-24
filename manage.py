@@ -196,6 +196,7 @@ def main():
     if args.client:
         start = time.time()
         clear_dir('mods/')
+        clear_dir('plugins/')
         download_common_files()
         download_client_files()
         print(f'{GREEN}Done! {(time.time() - start):.1f}s{CLEAR} ')
