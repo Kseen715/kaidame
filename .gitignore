@@ -31,6 +31,10 @@ optionsof.txt
 plugins/bstats
 plugins/PluginMetrics
 config/jade
+config/betterdeserttemples
+config/betterfortresses
+config/bettermineshafts
+config/betterstrongholds
 *.db
 world*
 .mixin.out
