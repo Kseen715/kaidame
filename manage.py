@@ -105,8 +105,9 @@ def get_file(
             )
             latest = all_files[0]
             vesrion_id = latest['id']
+            new_filename = latest['fileName']
             url = f"{CURSEFORGE_API}/mods/{project_id}/files/{vesrion_id}/download"
-            download_file(url, dir, filename, max_retries)
+            download_file(url, dir, new_filename, max_retries)
             print(f'{CLEAR}', end='')
             return
     else:
