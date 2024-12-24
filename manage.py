@@ -58,18 +58,18 @@ def get_file(
                 f"{MODRINTH_API}/project/{project_id}/version"
             ).json()
             # if mc_version is not in game_versions, remove it from the list
-            all_version = list(filter(
+            filtered_version = list(filter(
                 lambda x: mc_version in x['game_versions'], all_version)
             )
             # if modloader is not in loaders, remove it from the list
-            all_version = list(filter(
-                lambda x: modloader in x['loaders'], all_version)
+            filtered_version = list(filter(
+                lambda x: modloader in x['loaders'], filtered_version)
             )
             # sort by date_published
-            all_version = sorted(
-                all_version, key=lambda x: x['date_published'], reverse=True
+            filtered_version = sorted(
+                filtered_version, key=lambda x: x['date_published'], reverse=True
             )
-            latest = all_version[0]
+            latest = filtered_version[0]
             url = latest['files'][0]['url']
             new_filename = latest['files'][0]['filename']
             download_file(url, dir, new_filename, max_retries)
@@ -252,6 +252,8 @@ def install_crypto_client_files():
 def download_client_files():
     install_crypto_client_files()
     data = read_csv('getters/client.csv')
+    if len(data) < 1:
+        return
     for frame in data:
         print(f"Downloading {frame['filename']}...")
         get_file(frame, 'mods/')
@@ -259,6 +261,8 @@ def download_client_files():
 
 def download_server_files():
     data = read_csv('getters/server.csv')
+    if len(data) < 1:
+        return
     for frame in data:
         print(f"Downloading {frame['filename']}...")
         get_file(frame, 'mods/')
@@ -266,13 +270,17 @@ def download_server_files():
 
 def download_plugins_files():
     data = read_csv('getters/plugins.csv')
+    if len(data) < 1:
+        return
     for frame in data:
         print(f"Downloading {frame['filename']}...")
-        get_file(frame, 'plugins/')
+        get_file(frame, 'plugins/', modloader='bukkit')
 
 
 def download_common_files():
     data = read_csv('getters/common.csv')
+    if len(data) < 1:
+        return
     for frame in data:
         print(f"Downloading {frame['filename']}...")
         get_file(frame, 'mods/')
