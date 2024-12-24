@@ -11,11 +11,14 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
 
+# Colors
 CLEAR = ks.Style.RESET_ALL
 GREEN = ks.Fore.GREEN
 YELLOW = ks.Fore.YELLOW
 RED = ks.Fore.RED
 CYAN = ks.Fore.CYAN
+UPDATING = CYAN
+DECRYPTING = ks.Fore.MAGENTA
 
 
 def read_csv(filename: str) -> list:
@@ -48,7 +51,7 @@ def get_file(
             download_file(url, dir, filename, max_retries)
             return
         else:
-            print(f'{CYAN}', end='')
+            print(f'{UPDATING}', end='')
             # get version
             project_id = list(filter(None, url.split('/')))[-1]
             all_version = requests.get(
@@ -124,6 +127,7 @@ def decrypt_file(key: str, in_path: str, out_path: str):
     """
     Decrypt the file using AES streaming chunks
     """
+    print(f'{DECRYPTING}', end='')
     CHUNK_SIZE = 4096  # 1MB chunks
     total_size = os.path.getsize(in_path)
     processed = 0
@@ -154,7 +158,7 @@ def decrypt_file(key: str, in_path: str, out_path: str):
                 pt = unpad(pt, AES.block_size)
 
             outfile.write(pt)
-    print()  # New line after download
+    print(f'{CLEAR}')
 
 
 def generate_key():
