@@ -40,12 +40,15 @@ def get_file(
         mc_version: str = "1.20.1",
         modloader: str = "forge"
 ):
+    MODRINTH_BASE_URL = "https://cdn.modrinth.com"
     MODRINTH_API = "https://api.modrinth.com/v2"
+    CURSEFORGE_BASE_URL = "https://www.curseforge.com"
+    CURSEFORGE_API = "https://www.curseforge.com/api/v1"
 
     url = frame['url']
     filename = frame['filename']
     # if url in in pattern "https://cdn.modrinth.com/data/XXXXXXXX/"
-    if url.startswith('https://cdn.modrinth.com/data/'):
+    if url.startswith(MODRINTH_BASE_URL + '/data/'):
         # Modrinth
         if 'versions/' in url:
             download_file(url, dir, filename, max_retries)
@@ -73,6 +76,37 @@ def get_file(
             url = latest['files'][0]['url']
             new_filename = latest['files'][0]['filename']
             download_file(url, dir, new_filename, max_retries)
+            print(f'{CLEAR}', end='')
+            return
+    elif url.startswith(CURSEFORGE_API):
+        # CurseForge
+        if 'files/' in url:
+            download_file(url, dir, filename, max_retries)
+            return
+        else:
+            print(f'{UPDATING}', end='')
+            # get project_id
+            project_id = list(filter(None, url.split('/')))[-1]
+            # get all files
+            all_files = requests.get(
+                f"{CURSEFORGE_API}/mods/{project_id}/files"
+            ).json()
+            # in gameVersions check if mc_version is in it and modloader is in it
+            all_files = all_files['data']
+            all_files = list(filter(
+                lambda x: mc_version in x['gameVersions'] and modloader.lower(
+                ) in [v.lower() for v in x['gameVersions']],
+                all_files
+            )
+            )
+            # sort by dateModified
+            all_files = sorted(
+                all_files, key=lambda x: x['dateModified'], reverse=True
+            )
+            latest = all_files[0]
+            vesrion_id = latest['id']
+            url = f"{CURSEFORGE_API}/mods/{project_id}/files/{vesrion_id}/download"
+            download_file(url, dir, filename, max_retries)
             print(f'{CLEAR}', end='')
             return
     else:
