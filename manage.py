@@ -72,6 +72,9 @@ def get_file(
             download_file(url, dir, new_filename, max_retries)
             print(f'{CLEAR}', end='')
             return
+    else:
+        # direct download
+        download_file(url, dir, filename, max_retries)
 
 
 def show_progress(downloaded, total):
