@@ -13,6 +13,7 @@ from Crypto.Random import get_random_bytes
 
 CLEAR = ks.Style.RESET_ALL
 GREEN = ks.Fore.GREEN
+YELLOW = ks.Fore.YELLOW
 RED = ks.Fore.RED
 
 
@@ -36,6 +37,34 @@ def get_file(frame: dict, dir: str, max_retries=5):
     download_file(url, dir, filename, max_retries)
 
 
+def show_progress(downloaded, total):
+    """
+    Show download progress
+
+    Args:
+        downloaded: downloaded size in bytes
+        total: total size in bytes
+    """
+    max_width = 40
+    if total >= 1024**3:
+        total /= 1024**3
+        downloaded /= 1024**3
+        annotation = 'GB'
+    elif total >= 1024**2:
+        total /= 1024**2
+        downloaded /= 1024**2
+        annotation = 'MB'
+    elif total >= 1024**1:
+        total /= 1024
+        downloaded /= 1024
+        annotation = 'KB'
+    else:
+        annotation = 'B'
+    done = int(max_width * downloaded / total)
+    print(f'\r[{"="*done}{" "*(max_width-done)
+                          }] {downloaded:.1f}/{total:.1f} {annotation}', end='')
+
+
 def encrypt_file(key: str, in_path: str, out_path: str):
     """
     Encrypt the file using AES
@@ -53,17 +82,39 @@ def encrypt_file(key: str, in_path: str, out_path: str):
 
 def decrypt_file(key: str, in_path: str, out_path: str):
     """
-    Decrypt the file using AES
+    Decrypt the file using AES streaming chunks
     """
-    with open(in_path, 'rb') as file:
-        ct_bytes = file.read()
+    CHUNK_SIZE = 4096  # 1MB chunks
+    total_size = os.path.getsize(in_path)
+    processed = 0
 
     cipher = AES.new(key, AES.MODE_CBC)
-    ct_bytes = base64.b64decode(ct_bytes)
-    pt = unpad(cipher.decrypt(ct_bytes), AES.block_size)
 
-    with open(out_path, 'wb') as file:
-        file.write(pt)
+    with open(in_path, 'rb') as infile, open(out_path, 'wb') as outfile:
+        while True:
+            chunk = infile.read(CHUNK_SIZE)
+            if not chunk:
+                break
+
+            processed += len(chunk)
+            show_progress(processed, total_size)
+
+            # Decode base64
+            chunk = base64.b64decode(chunk)
+
+            # For last chunk, handle padding
+            if len(chunk) % AES.block_size != 0:
+                chunk = pad(chunk, AES.block_size)
+
+            # Decrypt and write
+            pt = cipher.decrypt(chunk)
+
+            # Remove padding from last chunk
+            if processed >= total_size:
+                pt = unpad(pt, AES.block_size)
+
+            outfile.write(pt)
+    print()  # New line after download
 
 
 def generate_key():
@@ -71,8 +122,11 @@ def generate_key():
 
 
 def read_key():
-    with open('key', 'r') as file:
-        key = file.read()
+    try:
+        with open('key', 'r') as file:
+            key = file.read()
+    except FileNotFoundError:
+        raise FileNotFoundError('Key not found! Please create a ./key first.')
     return base64.b64decode(key)
 
 
@@ -83,12 +137,6 @@ def save_key(key):
 
 
 def download_file(url, dir, filename, max_retries=3):
-    def show_progress(downloaded, total, annotation='KB'):
-        max_width = 40
-        done = int(max_width * downloaded / total)
-        print(f'\r[{"="*done}{" "*(max_width-done)
-                              }] {downloaded:.1f}/{total:.1f} {annotation}', end='')
-
     for attempt in range(max_retries):
         try:
             response = requests.get(url, stream=True)
@@ -104,7 +152,7 @@ def download_file(url, dir, filename, max_retries=3):
             for chunk in response.iter_content(chunk_size=8192):
                 downloaded += len(chunk)
                 content.extend(chunk)
-                show_progress(downloaded/1024, total_size/1024, "KB")
+                show_progress(downloaded, total_size)
 
             print()  # New line after download
 
@@ -124,7 +172,7 @@ def download_file(url, dir, filename, max_retries=3):
             if attempt == max_retries - 1:
                 print(f"\n{RED}Error downloading {filename}: {str(e)}{CLEAR} ")
                 return False
-            print(f"\n{RED}Retrying download... (attempt {
+            print(f"\n{YELLOW}Retrying download... (attempt {
                   attempt + 2}/{max_retries}){CLEAR} ")
             time.sleep(1)
 
@@ -141,15 +189,21 @@ def clear_dir(dir: str, extensions=['.jar', '.zip']):
             os.remove(dir + file)
     print(f'{GREEN}Done!{CLEAR} ')
 
+
 def install_crypto_client_files():
     # install files from ./getters/client
     files = os.listdir('./getters/client')
-    for file in files:
-        # check if file is a jar file
-        if file.endswith('.jar.enc'):
-            # decrypt the file
-            print(f"Decrypting {file}...")
-            decrypt_file(read_key(), f'./getters/client/{file}', f'./mods/{file[:-4]}')
+    try:
+        for file in files:
+            # check if file is a jar file
+            if file.endswith('.jar.enc'):
+                # decrypt the file
+                print(f"Decrypting {file}...")
+                decrypt_file(
+                    read_key(), f'./getters/client/{file}', f'./mods/{file[:-4]}')
+    except Exception as e:
+        print(f'{YELLOW}{e} Skipping encrypted stuff...{CLEAR} ')
+
 
 def download_client_files():
     install_crypto_client_files()
@@ -157,7 +211,6 @@ def download_client_files():
     for frame in data:
         print(f"Downloading {frame['filename']}...")
         get_file(frame, 'mods/')
-
 
 
 def download_server_files():
@@ -197,16 +250,16 @@ def main():
         start = time.time()
         clear_dir('mods/')
         clear_dir('plugins/')
-        download_common_files()
         download_client_files()
+        download_common_files()
         print(f'{GREEN}Done! {(time.time() - start):.1f}s{CLEAR} ')
     elif args.server:
         start = time.time()
         clear_dir('mods/')
         clear_dir('plugins/')
-        download_common_files()
         download_server_files()
         download_plugins_files()
+        download_common_files()
         print(f'{GREEN}Done! {(time.time() - start):.1f}s{CLEAR} ')
     elif args.key:
         save_key(generate_key())
