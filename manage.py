@@ -22,7 +22,7 @@ CURSEFORGE_API = "https://api.curseforge.com/v1"
 CURSEFORGE_API_OLD = "https://www.curseforge.com/api/v1"
 CURSEFORGE_API_KEY = "https://cf.polymc.org/api"  # Thanks to PolyMC
 
-USE_THREADING = False
+USE_THREADING = True
 THREADS = 32
 THREADS = max(THREADS, os.cpu_count())
 

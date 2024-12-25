@@ -1,7 +1,9 @@
 certifi==2024.12.14
 charset-normalizer==3.4.0
+colorama==0.4.6
 idna==3.10
 ksilorama==0.4.10
 pycryptodome==3.21.0
 requests==2.32.3
+tqdm==4.67.1
 urllib3==2.3.0
