@@ -14,7 +14,9 @@ from Crypto.Random import get_random_bytes
 MODRINTH_BASE_URL = "https://cdn.modrinth.com"
 MODRINTH_API = "https://api.modrinth.com/v2"
 CURSEFORGE_BASE_URL = "https://www.curseforge.com"
-CURSEFORGE_API = "https://www.curseforge.com/api/v1"
+CURSEFORGE_API = "https://api.curseforge.com/v1"
+CURSEFORGE_API_OLD = "https://www.curseforge.com/api/v1"
+CURSEFORGE_API_KEY = "https://cf.polymc.org/api"
 
 # Colors
 CLEAR = ks.Style.RESET_ALL
@@ -38,7 +40,6 @@ def read_csv(filename: str) -> list:
     data = [{header[i]: data[j][i]
              for i in range(len(header))} for j in range(len(data))]
     return data
-
 
 def get_file(
         frame: dict, dir: str, max_retries=5,
@@ -78,7 +79,7 @@ def get_file(
             download_file(url, dir, new_filename, max_retries)
             print(f'{CLEAR}', end='')
             return
-    elif url.startswith(CURSEFORGE_API):
+    elif url.startswith(CURSEFORGE_API) or url.startswith(CURSEFORGE_API_OLD):
         # CurseForge
         if 'files/' in url:
             download_file(url, dir, filename, max_retries)
@@ -88,8 +89,14 @@ def get_file(
             # get project_id
             project_id = list(filter(None, url.split('/')))[-1]
             # get all files
+            api_key = requests.get(CURSEFORGE_API_KEY).json()['token']
             all_files = requests.get(
-                f"{CURSEFORGE_API}/mods/{project_id}/files"
+                f"{CURSEFORGE_API}/mods/{project_id}/files",
+                params={
+                    'gameVersion': mc_version,
+                    'modLoaderType': modloader.capitalize(),
+                    },
+                headers={'x-api-key': api_key}
             ).json()
             # in gameVersions check if mc_version is in it and modloader is in it
             all_files = all_files['data']
@@ -101,12 +108,13 @@ def get_file(
             )
             # sort by dateModified
             all_files = sorted(
-                all_files, key=lambda x: x['dateModified'], reverse=True
+                all_files, key=lambda x: x['fileDate'], reverse=True
             )
             latest = all_files[0]
             vesrion_id = latest['id']
             new_filename = latest['fileName']
-            url = f"{CURSEFORGE_API}/mods/{project_id}/files/{vesrion_id}/download"
+            url = latest['downloadUrl']
+            # url = f"{CURSEFORGE_API}/mods/{project_id}/files/{vesrion_id}/download"
             download_file(url, dir, new_filename, max_retries)
             print(f'{CLEAR}', end='')
             return
