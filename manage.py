@@ -275,7 +275,10 @@ def download_file(url, dir, filename, max_retries=3, quiet=False):
             if attempt == max_retries - 1:
                 print(f"\n{RED}Error downloading {filename}: {str(e)}{CLEAR} ")
                 return False
-            print(f"{YELLOW}Something went wrong. Retrying download... (attempt {
+            prefix = ''
+            if USE_THREADING:
+                prefix = '\n'
+            print(f"{prefix}{YELLOW}Something went wrong. Retrying download... (attempt {
                   attempt + 2}/{max_retries}){CLEAR} ")
             time.sleep(1)
 
