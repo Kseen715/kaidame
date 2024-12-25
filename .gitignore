@@ -34,11 +34,16 @@ optionsof.txt
 # Server
 plugins/bstats
 plugins/PluginMetrics
-config/jade
-config/betterdeserttemples
-config/betterfortresses
-config/bettermineshafts
-config/betterstrongholds
+config/*
+!config/biomesoplenty
+!config/terrablender.toml
+!config/xaerominimap-common.txt
+!config/xaerominimap.txt
+!config/xaeroworldmap-common.txt
+!config/xaeroworldmap.txt
+!config/skinlayers.json
+!config/lootr-common.toml
+!config/entityculling.json
 *.db
 world*
 .mixin.out
