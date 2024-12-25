@@ -19,7 +19,6 @@ resourcepacks
 saves
 screenshots
 shaderpacks
-options.txt
 lastlogin
 launcher_log.txt
 launcher_profiles.json
@@ -30,6 +29,7 @@ crash-reports
 xaero
 optionsshaders.txt
 optionsof.txt
+patchouli_data.json
 
 # Server
 plugins/bstats
