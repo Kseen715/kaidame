@@ -191,6 +191,10 @@ def decrypt_file(key: str, in_path: str, out_path: str):
     total_size = os.path.getsize(in_path)
     processed = 0
 
+    # if out path dir does not exist, create it
+    if not os.path.exists(os.path.dirname(out_path)):
+        os.makedirs(os.path.dirname(out_path))
+
     cipher = AES.new(key, AES.MODE_CBC)
 
     with open(in_path, 'rb') as infile, open(out_path, 'wb') as outfile:
