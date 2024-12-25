@@ -16,7 +16,7 @@ MODRINTH_API = "https://api.modrinth.com/v2"
 CURSEFORGE_BASE_URL = "https://www.curseforge.com"
 CURSEFORGE_API = "https://api.curseforge.com/v1"
 CURSEFORGE_API_OLD = "https://www.curseforge.com/api/v1"
-CURSEFORGE_API_KEY = "https://cf.polymc.org/api"
+CURSEFORGE_API_KEY = "https://cf.polymc.org/api" # Thanks to PolyMC
 
 # Colors
 CLEAR = ks.Style.RESET_ALL
