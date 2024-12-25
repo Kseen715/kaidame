@@ -1,10 +1,14 @@
 # read server.csv
+from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor
+import concurrent.futures
 import requests
 import csv
 import os
 import argparse
 import time
 import base64
+import threading
 
 import ksilorama as ks
 from Crypto.Cipher import AES
@@ -16,7 +20,11 @@ MODRINTH_API = "https://api.modrinth.com/v2"
 CURSEFORGE_BASE_URL = "https://www.curseforge.com"
 CURSEFORGE_API = "https://api.curseforge.com/v1"
 CURSEFORGE_API_OLD = "https://www.curseforge.com/api/v1"
-CURSEFORGE_API_KEY = "https://cf.polymc.org/api" # Thanks to PolyMC
+CURSEFORGE_API_KEY = "https://cf.polymc.org/api"  # Thanks to PolyMC
+
+USE_THREADING = False
+THREADS = 32
+THREADS = max(THREADS, os.cpu_count())
 
 # Colors
 CLEAR = ks.Style.RESET_ALL
@@ -41,10 +49,12 @@ def read_csv(filename: str) -> list:
              for i in range(len(header))} for j in range(len(data))]
     return data
 
+
 def get_file(
-        frame: dict, dir: str, max_retries=5,
-        mc_version: str = "1.20.1",
-        modloader: str = "forge"
+    frame: dict, dir: str, max_retries=5,
+    mc_version: str = "1.20.1",
+    modloader: str = "forge",
+    quiet=False
 ):
     url = frame['url']
     filename = frame['filename']
@@ -52,10 +62,11 @@ def get_file(
     if url.startswith(MODRINTH_BASE_URL + '/data/'):
         # Modrinth
         if 'versions/' in url:
-            download_file(url, dir, filename, max_retries)
+            download_file(url, dir, filename, max_retries, quiet)
             return
         else:
-            print(f'{UPDATING}', end='')
+            if not quiet:
+                print(f'{UPDATING}', end='')
             # get version
             project_id = list(filter(None, url.split('/')))[-1]
             all_version = requests.get(
@@ -76,16 +87,18 @@ def get_file(
             latest = filtered_version[0]
             url = latest['files'][0]['url']
             new_filename = latest['files'][0]['filename']
-            download_file(url, dir, new_filename, max_retries)
-            print(f'{CLEAR}', end='')
+            download_file(url, dir, new_filename, max_retries, quiet)
+            if not quiet:
+                print(f'{CLEAR}', end='')
             return
     elif url.startswith(CURSEFORGE_API) or url.startswith(CURSEFORGE_API_OLD):
         # CurseForge
         if 'files/' in url:
-            download_file(url, dir, filename, max_retries)
+            download_file(url, dir, filename, max_retries, quiet)
             return
         else:
-            print(f'{UPDATING}', end='')
+            if not quiet:
+                print(f'{UPDATING}', end='')
             # get project_id
             project_id = list(filter(None, url.split('/')))[-1]
             # get all files
@@ -95,7 +108,7 @@ def get_file(
                 params={
                     'gameVersion': mc_version,
                     'modLoaderType': modloader.capitalize(),
-                    },
+                },
                 headers={'x-api-key': api_key}
             ).json()
             # in gameVersions check if mc_version is in it and modloader is in it
@@ -115,12 +128,13 @@ def get_file(
             new_filename = latest['fileName']
             url = latest['downloadUrl']
             # url = f"{CURSEFORGE_API}/mods/{project_id}/files/{vesrion_id}/download"
-            download_file(url, dir, new_filename, max_retries)
-            print(f'{CLEAR}', end='')
+            download_file(url, dir, new_filename, max_retries, quiet)
+            if not quiet:
+                print(f'{CLEAR}', end='')
             return
     else:
         # direct download
-        download_file(url, dir, filename, max_retries)
+        download_file(url, dir, filename, max_retries, quiet)
 
 
 def show_progress(downloaded, total):
@@ -223,7 +237,7 @@ def save_key(key):
         file.write(key)
 
 
-def download_file(url, dir, filename, max_retries=3):
+def download_file(url, dir, filename, max_retries=3, quiet=False):
     for attempt in range(max_retries):
         try:
             response = requests.get(url, stream=True)
@@ -239,9 +253,11 @@ def download_file(url, dir, filename, max_retries=3):
             for chunk in response.iter_content(chunk_size=8192):
                 downloaded += len(chunk)
                 content.extend(chunk)
-                show_progress(downloaded, total_size)
+                if not quiet:
+                    show_progress(downloaded, total_size)
 
-            print()  # New line after download
+            if not quiet:
+                print()  # New line after download
 
             if downloaded != total_size:
                 raise ValueError(f"{RED}Download incomplete: {
@@ -259,7 +275,7 @@ def download_file(url, dir, filename, max_retries=3):
             if attempt == max_retries - 1:
                 print(f"\n{RED}Error downloading {filename}: {str(e)}{CLEAR} ")
                 return False
-            print(f"{YELLOW}Retrying download... (attempt {
+            print(f"{YELLOW}Something went wrong. Retrying download... (attempt {
                   attempt + 2}/{max_retries}){CLEAR} ")
             time.sleep(1)
 
@@ -292,41 +308,88 @@ def install_crypto_client_files():
         print(f'{YELLOW}{e} Skipping encrypted stuff...{CLEAR} ')
 
 
+def run_get_file_threaded(data: list, desc: str, dir: str):
+    with ThreadPoolExecutor(max_workers=THREADS) as executor:
+        # Create progress bar
+        pbar = tqdm(
+            total=len(data),
+            desc=desc,
+            unit="file",
+            bar_format="{desc}: {percentage:3.0f}% [{bar}] {n_fmt:>3}/{total_fmt:>3} [{elapsed:>5}<{remaining:>5}]",
+            ascii=" =",
+        )
+        # Submit all download tasks
+        futures = [executor.submit(
+            get_file, frame, dir, modloader=frame['loader'], quiet=True) for frame in data]
+        # Update progress as downloads complete
+        for _ in concurrent.futures.as_completed(futures):
+            pbar.update(1)
+        pbar.close()
+
+
 def download_client_files():
     install_crypto_client_files()
     data = read_csv('getters/client.csv')
     if len(data) < 1:
         return
-    for frame in data:
-        print(f"Downloading {frame['filename']}...")
-        get_file(frame, 'mods/', modloader=frame['loader'])
+    if USE_THREADING:
+        run_get_file_threaded(
+            data,
+            "[ 💫 ] Downloading client files",
+            'mods/'
+        )
+    else:
+        for frame in data:
+            print(f"Downloading {frame['filename']}...")
+            get_file(frame, 'mods/', modloader=frame['loader'])
 
 
 def download_server_files():
     data = read_csv('getters/server.csv')
     if len(data) < 1:
         return
-    for frame in data:
-        print(f"Downloading {frame['filename']}...")
-        get_file(frame, 'mods/', modloader=frame['loader'])
+    if USE_THREADING:
+        run_get_file_threaded(
+            data,
+            "[ 💭 ] Downloading server files",
+            'mods/'
+        )
+    else:
+        for frame in data:
+            print(f"Downloading {frame['filename']}...")
+            get_file(frame, 'mods/', modloader=frame['loader'])
 
 
 def download_plugins_files():
     data = read_csv('getters/plugins.csv')
     if len(data) < 1:
         return
-    for frame in data:
-        print(f"Downloading {frame['filename']}...")
-        get_file(frame, 'plugins/', modloader=frame['loader'])
+    if USE_THREADING:
+        run_get_file_threaded(
+            data,
+            "[ 🧩 ] Downloading plugins     ",
+            'plugins/'
+        )
+    else:
+        for frame in data:
+            print(f"Downloading {frame['filename']}...")
+            get_file(frame, 'plugins/', modloader=frame['loader'])
 
 
 def download_common_files():
     data = read_csv('getters/common.csv')
     if len(data) < 1:
         return
-    for frame in data:
-        print(f"Downloading {frame['filename']}...")
-        get_file(frame, 'mods/', modloader=frame['loader'])
+    if USE_THREADING:
+        run_get_file_threaded(
+            data,
+            "[ 📦 ] Downloading common files",
+            'mods/'
+        )
+    else:
+        for frame in data:
+            print(f"Downloading {frame['filename']}...")
+            get_file(frame, 'mods/', modloader=frame['loader'])
 
 
 def main():
