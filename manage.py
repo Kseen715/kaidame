@@ -401,6 +401,69 @@ def download_common_files():
             get_file(frame, 'mods/', modloader=frame['loader'])
 
 
+def __get_mod_count_intended(type: list):
+    count = 0
+    if type == 'client':
+        data = read_csv('getters/client.csv')
+        count += len(data)
+        # count files in ./getters/client
+        if os.path.exists('./getters/client'):
+            files = os.listdir('./getters/client')
+            for file in files:
+                if file.endswith('.jar.enc'):
+                    count += 1
+    elif type == 'server':
+        data = read_csv('getters/server.csv')
+        count += len(data)
+        if os.path.exists('./getters/server'):
+            files = os.listdir('./getters/server')
+            for file in files:
+                if file.endswith('.jar.enc'):
+                    count += 1
+    elif type == 'plugins':
+        data = read_csv('getters/plugins.csv')
+        count += len(data)
+        if os.path.exists('./getters/plugins'):
+            files = os.listdir('./getters/plugins')
+            for file in files:
+                if file.endswith('.jar.enc'):
+                    count += 1
+    elif type == 'common':
+        data = read_csv('getters/common.csv')
+        count += len(data)
+        if os.path.exists('./getters/common'):
+            files = os.listdir('./getters/common')
+            for file in files:
+                if file.endswith('.jar.enc'):
+                    count += 1
+    else:
+        return 0
+    return count
+
+
+def get_mod_count_intended(types: list):
+    count = 0
+    for item in types:
+        count += __get_mod_count_intended(item)
+    return count
+
+
+def get_mod_count_actual():
+    count = 0
+    if os.path.exists('./mods'):
+        files = os.listdir('./mods')
+        for file in files:
+            if file.endswith('.jar'):
+                count += 1
+
+    if os.path.exists('./plugins'):
+        files = os.listdir('./plugins')
+        for file in files:
+            if file.endswith('.jar'):
+                count += 1
+    return count
+
+
 def export_server():
     """Export server files and folders to server.zip"""
     # Set paths
@@ -505,16 +568,24 @@ def main():
         start = time.time()
         clear_dir('mods/')
         clear_dir('plugins/')
-        download_client_files()
-        download_common_files()
+        while (get_mod_count_intended(['client', 'common']) != get_mod_count_actual()):
+            print(f'Intended: {
+                get_mod_count_intended(['client', 'common'])
+            } != Actual: {get_mod_count_actual()}')
+            download_client_files()
+            download_common_files()
         print(f'{GREEN}Done! {(time.time() - start):.1f}s{CLEAR} ')
     elif args.server:
         start = time.time()
         clear_dir('mods/')
         clear_dir('plugins/')
-        download_server_files()
-        download_plugins_files()
-        download_common_files()
+        while (get_mod_count_intended(['server', 'plugins', 'common']) != get_mod_count_actual()):
+            print(f'Intended: {
+                get_mod_count_intended(['server', 'plugins', 'common'])
+            } != Actual: {get_mod_count_actual()}')
+            download_server_files()
+            download_plugins_files()
+            download_common_files()
         print(f'{GREEN}Done! {(time.time() - start):.1f}s{CLEAR} ')
     elif args.server_export:
         export_server()
