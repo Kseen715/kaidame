@@ -472,9 +472,9 @@ def export_server():
 
     # Items to include
     includes = [
+        "config",
         "mods",
         "plugins",
-        "config",
         "server.properties",
     ]
     # File extensions to include

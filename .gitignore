@@ -62,6 +62,8 @@ usernamecache.json
 banned-ips.json
 banned-players.json
 *.zip
+patchouli_books
+local
 
 # Python
 *.pyc
