@@ -61,6 +61,7 @@ whitelist.json
 usernamecache.json
 banned-ips.json
 banned-players.json
+*.zip
 
 # Python
 *.pyc

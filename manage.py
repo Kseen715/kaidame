@@ -1,4 +1,6 @@
 # read server.csv
+from pathlib import Path
+import zipfile
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 import concurrent.futures
@@ -237,7 +239,7 @@ def save_key(key):
         file.write(key)
 
 
-def download_file(url, dir, filename, max_retries=3, quiet=False):
+def download_file(url, dir, filename, max_retries=5, quiet=False):
     for attempt in range(max_retries):
         try:
             response = requests.get(url, stream=True)
@@ -395,6 +397,90 @@ def download_common_files():
             get_file(frame, 'mods/', modloader=frame['loader'])
 
 
+def export_server():
+    """Export server files and folders to server.zip"""
+    # Set paths
+    source_dir = os.path.dirname(os.path.abspath(__file__))
+    zip_path = os.path.join(source_dir, "server.zip")
+
+    # Items to include
+    includes = [
+        "mods",
+        "plugins",
+        "config",
+        "server.properties",
+    ]
+    # File extensions to include
+    extensions = [".sh", ".bat", ".jar", ".yml"]
+
+    try:
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+            # Add folders and specific files
+            for item in includes:
+                path = os.path.join(source_dir, item)
+                if os.path.isdir(path):
+                    for root, _, files in os.walk(path):
+                        for file in files:
+                            file_path = os.path.join(root, file)
+                            arc_path = os.path.relpath(file_path, source_dir)
+                            zf.write(file_path, arc_path)
+                elif os.path.isfile(path):
+                    zf.write(path, os.path.basename(path))
+
+            # Add files with specific extensions
+            for file in os.listdir(source_dir):
+                if any(file.endswith(ext) for ext in extensions):
+                    zf.write(os.path.join(source_dir, file), file)
+
+        print(f"{GREEN}Server files exported to {zip_path}{CLEAR} ")
+        return True
+
+    except Exception as e:
+        print(f"Error exporting server: {e}")
+        return False
+
+
+def export_client():
+    """Export client files and folders to server.zip"""
+    # Set paths
+    source_dir = os.path.dirname(os.path.abspath(__file__))
+    zip_path = os.path.join(source_dir, "client.zip")
+
+    # Items to include
+    includes = [
+        "mods",
+        "config",
+    ]
+    # File extensions to include
+    extensions = []
+
+    try:
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+            # Add folders and specific files
+            for item in includes:
+                path = os.path.join(source_dir, item)
+                if os.path.isdir(path):
+                    for root, _, files in os.walk(path):
+                        for file in files:
+                            file_path = os.path.join(root, file)
+                            arc_path = os.path.relpath(file_path, source_dir)
+                            zf.write(file_path, arc_path)
+                elif os.path.isfile(path):
+                    zf.write(path, os.path.basename(path))
+
+            # Add files with specific extensions
+            for file in os.listdir(source_dir):
+                if any(file.endswith(ext) for ext in extensions):
+                    zf.write(os.path.join(source_dir, file), file)
+
+        print(f"{GREEN}Client files exported to {zip_path}{CLEAR} ")
+        return True
+
+    except Exception as e:
+        print(f"Error exporting server: {e}")
+        return False
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Download mods for client or server')
@@ -405,6 +491,10 @@ def main():
     parser.add_argument('--key', action='store_true',
                         help='Generate key for encryption')
     parser.add_argument('--encrypt', type=str, help='Encrypt file')
+    parser.add_argument('--server-export', action='store_true',
+                        help='Export server files to server.zip')
+    parser.add_argument('--client-export', action='store_true',
+                        help='Export client files to client.zip')
     args = parser.parse_args()
 
     if args.client:
@@ -422,6 +512,10 @@ def main():
         download_plugins_files()
         download_common_files()
         print(f'{GREEN}Done! {(time.time() - start):.1f}s{CLEAR} ')
+    elif args.server_export:
+        export_server()
+    elif args.client_export:
+        export_client()
     elif args.key:
         save_key(generate_key())
         print(f'{GREEN}Key generated and saved! ./key{CLEAR} ')
