@@ -517,6 +517,7 @@ def export_client():
     includes = [
         "mods",
         "config",
+        "options.txt",
     ]
     # File extensions to include
     extensions = []
