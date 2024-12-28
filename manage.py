@@ -49,6 +49,27 @@ def read_csv(filename: str) -> list:
     # construct a dictionary
     data = [{header[i]: data[j][i]
              for i in range(len(header))} for j in range(len(data))]
+    # check for duplicates and print them
+    seen_urls = set()
+    duplicates = set()
+    for frame in data:
+        url = frame['url']
+        if url in seen_urls:
+            duplicates.add(url)
+        seen_urls.add(url)
+    if len(duplicates) > 0:
+        print(f"{YELLOW}Duplicates found in {filename}: {duplicates}{CLEAR} ")
+    # check for duplicates in filenames
+    seen_filenames = set()
+    duplicates = set()
+    for frame in data:
+        _filename = frame['filename']
+        if _filename in seen_filenames:
+            duplicates.add(_filename)
+        seen_filenames.add(_filename)
+    if len(duplicates) > 0:
+        print(f"{YELLOW}Duplicates found in {filename}: {duplicates
+                }{CLEAR} ")
     return data
 
 
