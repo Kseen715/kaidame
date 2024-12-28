@@ -496,7 +496,6 @@ def export_server():
         "config",
         "mods",
         "plugins",
-        "server.properties",
     ]
     # File extensions to include
     extensions = [".sh", ".bat", ".jar", ".yml"]
@@ -538,7 +537,6 @@ def export_client():
     includes = [
         "mods",
         "config",
-        "options.txt",
     ]
     # File extensions to include
     extensions = []
