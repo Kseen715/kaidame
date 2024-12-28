@@ -30,6 +30,7 @@ xaero
 optionsshaders.txt
 optionsof.txt
 patchouli_data.json
+options.txt
 
 # Server
 plugins/bstats
