@@ -4,12 +4,21 @@ venv
 key
 
 # Client
-config/xaeropatreon.txt
-config/xaerominimap_entities.json 
-config/NoChatReports
-config/durabilitytooltip*
-config/emi*
-config/tectonic*
+plugins/bstats
+plugins/PluginMetrics
+config/*
+!config/biomesoplenty/
+!config/terrablender.toml
+!config/xaerominimap-common.txt
+!config/xaerominimap.txt
+!config/xaeroworldmap-common.txt
+!config/xaeroworldmap.txt
+!config/skinlayers.json
+!config/lootr-common.toml
+!config/entityculling.json
+!config/ae2/
+!config/alexscaves_biome_generation/
+!config/emi.css
 emi.json
 servers.dat*
 XaeroWaypoints*
@@ -31,22 +40,6 @@ optionsshaders.txt
 optionsof.txt
 patchouli_data.json
 options.txt
-
-# Server
-plugins/bstats
-plugins/PluginMetrics
-config/*
-!config/biomesoplenty/
-!config/terrablender.toml
-!config/xaerominimap-common.txt
-!config/xaerominimap.txt
-!config/xaeroworldmap-common.txt
-!config/xaeroworldmap.txt
-!config/skinlayers.json
-!config/lootr-common.toml
-!config/entityculling.json
-!config/ae2/
-!config/alexscaves_biome_generation/
 *.db
 world*
 .mixin.out
